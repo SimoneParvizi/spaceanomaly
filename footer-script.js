@@ -359,6 +359,205 @@ document.addEventListener('DOMContentLoaded', function() {
       
       window.addEventListener("resize", createDotGrid);
     }
+    // Flowing circles animation setup
+    const parametricCanvas = document.getElementById("parametricCanvas");
+    console.log("Parametric canvas found:", parametricCanvas);
+    
+    if (parametricCanvas) {
+      const ctx = parametricCanvas.getContext("2d");
+      
+      // Animation frame polyfill and setup
+      (function(global) {
+        if (global.requestAnimationFrame) { return; }
+        if (global.webkitRequestAnimationFrame) {
+          global.requestAnimationFrame = global['webkitRequestAnimationFrame'];
+          global.cancelAnimationFrame = global['webkitCancelAnimationFrame'] || global['webkitCancelRequestAnimationFrame'];
+        }
+        var lastTime = 0;
+        global.requestAnimationFrame = function(callback) {
+          var currTime = new Date().getTime();
+          var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+          var id = global.setTimeout(function() { callback(currTime + timeToCall); }, timeToCall);
+          lastTime = currTime + timeToCall;
+          return id;
+        };
+        global.cancelAnimationFrame = function(id) { clearTimeout(id); };
+      })(window);
+
+      let w, h;
+      
+      const resizeCanvas = () => {
+        const rect = parametricCanvas.getBoundingClientRect();
+        w = parametricCanvas.width = rect.width;
+        h = parametricCanvas.height = rect.height;
+      };
+
+      const PI = Math.PI;
+      const HPI = PI / 2;
+      const PI2 = PI * 2;
+      const RAD = PI / 180;
+
+      const Point = function(x, y) {
+        this.x = x || 0;
+        this.y = y || 0;
+        this.angle = 0;
+        this.radius = 0;
+        this.radiusAngle = 0;
+        this.radiusSpeed = 0;
+      };
+
+      const Circle = function(count, normalLength, radiusIn, radiusOut, color, fill, glow) {
+        count = count % 1 == 0 ? count : (count + 1);
+        this.count = count;
+        this.normalLength = normalLength;
+        this.radiusIn = radiusIn;
+        this.radiusOut = radiusOut;
+        this.color = color;
+        this.fill = fill;
+        this.glow = glow;
+
+        this.angleSpeed = (Math.random() - .5) * RAD * .1;
+        this.points = [];
+        this.init();
+      };
+
+      Circle.prototype = {
+        init: function() {
+          const step = PI2 / this.count;
+          let angle = Math.random() * PI2;
+          this.points = [];
+
+          for (let i = 0; i < this.count; i++) {
+            angle += step;
+            const p = new Point(0, 0);
+            p.angle = angle;
+            p.radius = 0;
+            p.radiusAngle = Math.random() * PI2;
+            p.radiusSpeed = RAD + Math.random() * 2 * RAD;
+            p.normal = this.normalLength;
+            this.points.push(p);
+          }
+        },
+
+        update: function() {
+          const scope = this;
+          this.points.forEach(function(p) {
+            p.angle += scope.angleSpeed;
+            p.radius = scope.radiusIn + (.5 + (.5 * Math.cos(p.radiusAngle))) * scope.radiusOut;
+            p.radiusAngle += p.radiusSpeed;
+
+            const x = p.x = Math.cos(p.angle) * p.radius;
+            const y = p.y = Math.sin(p.angle) * p.radius;
+
+            p.lx = x + Math.cos(p.angle + HPI) * p.normal;
+            p.ly = y + Math.sin(p.angle + HPI) * p.normal;
+
+            p.rx = x + Math.cos(p.angle - HPI) * p.normal;
+            p.ry = y + Math.sin(p.angle - HPI) * p.normal;
+          });
+        },
+
+        render: function(ctx) {
+          if (this.glow != null) {
+            ctx.shadowColor = '#FFF';
+            ctx.shadowBlur = 20;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+          }
+
+          ctx.strokeStyle = this.color;
+          ctx.beginPath();
+          this.points.forEach(function(p, i, a) {
+            const n = a[(i + 1) % a.length];
+            ctx.lineTo(p.x, p.y);
+            ctx.bezierCurveTo(p.lx, p.ly, n.rx, n.ry, n.x, n.y);
+          });
+
+          if (this.fill != null) {
+            ctx.lineWidth = 3;
+            ctx.fillStyle = this.fill;
+            ctx.fill();
+          }
+
+          ctx.stroke();
+          ctx.lineWidth = 1;
+        }
+      };
+
+      const circles = [];
+      const pointCount = 20;
+      const radiusIn = Math.min(w, h) * 0.15;
+      const radiusOut = 40;
+      const normal = 30;
+
+      function initCircles(count, pointCount, normal, radiusIn, radiusOut, colors, fills, glow) {
+        for (let i = 0; i < count; i++) {
+          const c = new Circle(pointCount, normal, radiusIn, radiusOut, 
+            colors[i % colors.length], 
+            fills != null ? fills[i % fills.length] : null, 
+            glow);
+          circles.push(c);
+        }
+      }
+
+      let animationId;
+
+      function update() {
+        animationId = requestAnimationFrame(update);
+
+        ctx.fillStyle = "#111";
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.save();
+        ctx.translate(w / 2, h / 2);
+
+        circles.forEach(function(c) {
+          c.update();
+          c.render(ctx);
+        });
+
+        ctx.restore();
+      }
+
+      // Initialize canvas and animation
+      resizeCanvas();
+      
+      const strokeColors = ["rgba(255,255,255,0.3)"];
+      const fillColors = ["rgba(0,0,0,.8)"];
+
+      initCircles(3, pointCount, normal, Math.min(w, h) * 0.15, radiusOut, strokeColors, null, true);
+      initCircles(1, 12, 20, Math.min(w, h) * 0.05, radiusOut / 3, ["rgba(255,255,255,0.5)"], fillColors, true);
+
+      // Handle resize
+      window.addEventListener("resize", () => {
+        resizeCanvas();
+        // Reinitialize circles with new dimensions
+        circles.length = 0;
+        initCircles(3, pointCount, normal, Math.min(w, h) * 0.15, radiusOut, strokeColors, null, true);
+        initCircles(1, 12, 20, Math.min(w, h) * 0.05, radiusOut / 3, ["rgba(255,255,255,0.5)"], fillColors, true);
+      });
+
+      // Start animation
+      update();
+
+      // Stop animation when out of view to save performance
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            if (!animationId) {
+              update();
+            }
+          } else {
+            if (animationId) {
+              cancelAnimationFrame(animationId);
+              animationId = null;
+            }
+          }
+        });
+      }, { threshold: 0 });
+
+      observer.observe(parametricCanvas);
+    }
   }, 500);
   
 }); // End DOMContentLoaded
