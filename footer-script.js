@@ -558,6 +558,93 @@ document.addEventListener('DOMContentLoaded', function() {
 
       observer.observe(parametricCanvas);
     }
+
+    // Setup center-out character animation for "THE ART OF REDUCTION"
+    setupCenterOutCharAnimation();
   }, 500);
+
+  // Function to set up the center-out character animation
+  function setupCenterOutCharAnimation() {
+    // Initialize Splitting.js functionality
+    const Splitting = function () {
+      const elements = document.querySelectorAll("[data-splitting]");
+
+      elements.forEach((element) => {
+        // Split text into words and chars
+        const text = element.textContent;
+        const words = text.split(" ");
+
+        element.innerHTML = words
+          .map((word) => {
+            return `<span class="word" style="position: relative; display: inline-block; margin-right: 0.25em;">${Array.from(
+              word
+            )
+              .map(
+                (char) =>
+                  `<span class="char" style="position: relative; display: inline-block;">${char}</span>`
+              )
+              .join("")}</span>`;
+          })
+          .join(" ");
+
+        return {
+          elements,
+          words: document.querySelectorAll(".word"),
+          chars: document.querySelectorAll(".char")
+        };
+      });
+
+      return { results: elements };
+    };
+
+    // Execute splitting
+    Splitting();
+
+    // Apply center-out animation
+    const animatedTitles = [
+      ...document.querySelectorAll(
+        "h2[data-splitting][data-center-animation]"
+      )
+    ];
+
+    animatedTitles.forEach((title) => {
+      const words = title.querySelectorAll(".word");
+
+      for (const word of words) {
+        const chars = word.querySelectorAll(".char");
+
+        // Create a timeline for better control
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: word,
+            start: "center bottom+=30%",
+            end: "top top+=15%",
+            scrub: 0.5,
+            invalidateOnRefresh: true,
+            toggleActions: "restart pause resume reset"
+          }
+        });
+
+        // Add the animation to the timeline
+        tl.fromTo(
+          chars,
+          {
+            "will-change": "opacity, transform",
+            x: (position, _, arr) => 150 * (position - arr.length / 2),
+            opacity: 0.5
+          },
+          {
+            ease: "power1.inOut",
+            x: 0,
+            opacity: 1,
+            stagger: {
+              grid: "auto",
+              from: "center"
+            }
+          }
+        );
+      }
+    });
+  }
   
 }); // End DOMContentLoaded

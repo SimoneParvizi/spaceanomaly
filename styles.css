@@ -644,6 +644,72 @@ canvas#space {
   z-index: 10;
 }
 
+/* ===== PARTICLE SKULL SECTION ===== */
+.particle-section {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  background: rgba(0, 0, 0, 0.3); /* Semi-transparent so starfield can show through */
+  overflow: hidden;
+}
+
+#particleCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  z-index: 1;
+}
+
+.text-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  padding: 2rem;
+  box-sizing: border-box;
+  max-width: 100vw;
+  overflow: hidden;
+}
+
+.text-wrapper h1 {
+  font-size: 2rem;
+  font-weight: 300;
+  color: var(--color-text);
+  font-family: var(--font-title);
+  line-height: 1.4;
+  max-width: 600px;
+  text-wrap: balance;
+  margin: 0;
+}
+
+.text-wrapper .small-text {
+  font-size: 0.75rem;
+  font-weight: 300;
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.text-line {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 2rem;
+}
+
 .footer .additional-content.visible {
   opacity: 1;
   transform: translateY(0);
