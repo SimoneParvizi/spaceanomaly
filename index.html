@@ -9,53 +9,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 </head>
 <body>
-    <!-- Navigation Section -->
-    <div class="navigation-section">
-        <div class="nav-container">
-            <div class="nav">
-                <div class="logo-container">
-                    <div class="logo-circles">
-                        <div class="circle circle-1"></div>
-                        <div class="circle circle-2"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="values">
-                <h3>+Menu</h3>
-                <ul>
-                    <li><a href="#">Clarity</a></li>
-                    <li><a href="#">Simplicity</a></li>
-                    <li><a href="#">Creativity</a></li>
-                    <li><a href="#">Authenticity</a></li>
-                    <li><a href="#">Connect</a></li>
-                </ul>
-            </div>
-
-            <div class="location-2">
-                <h3>+Location</h3>
-                <p>6357 Selma Ave</p>
-                <p>Los Angeles</p>
-                <p>CA 90028</p>
-            </div>
-
-            <div class="contact">
-                <h3>+Get In Touch</h3>
-                <p>(310) 456-7890</p>
-                <p><a href="mailto:hi@filip.fyi">hi@filip.fyi</a></p>
-            </div>
-
-            <div class="social">
-                <h3>+Social</h3>
-                <ul>
-                    <li><a href="https://instagram.com/filipz__">Instagram</a></li>
-                    <li><a href="https://x.com/filipz">X / Twitter</a></li>
-                    <li><a href="https://linkedin.com/in/filipzrnzevic">LinkedIn</a></li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
     <!-- Shader Section -->
     <div class="shader-section">
         <canvas id="canvas"></canvas>
@@ -156,22 +109,21 @@ void main() {
     <script src="script.js"></script>
     <script src="footer-script.js"></script>
 
-    <!-- Footer Section -->
-    <div class="footer">
 
-        <!-- Sticky WebGL container -->
-        <div class="sticky-container" id="stickyContainer">
-            <div class="webgl-section" id="webglSection">
-                <div class="canvas-container" id="canvasContainer">
-                    <canvas id="space"></canvas>
-                    <div class="animated-text" id="animatedText">
-                        CLARITY<br />THROUGH<br />SIMPLICITY
-                    </div>
+    <!-- Sticky WebGL container - moved outside footer -->
+    <div class="sticky-container" id="stickyContainer">
+        <div class="webgl-section" id="webglSection">
+            <div class="canvas-container" id="canvasContainer">
+                <canvas id="space"></canvas>
+                <div class="animated-text" id="animatedText">
+                    TRUST YOUR EYES<br />NOT THE NOISE
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Additional 100vh section -->
+    <!-- Additional content section -->
+    <div class="footer">
         <div class="additional-section section-transition" id="additionalSection">
             <div class="additional-content" id="additionalContent">
                 <h2>THE ART OF REDUCTION</h2>
