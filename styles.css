@@ -700,6 +700,9 @@ canvas#space {
   margin: 0;
   flex-shrink: 0;
   white-space: nowrap;
+  max-width: 200px;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .text-line {

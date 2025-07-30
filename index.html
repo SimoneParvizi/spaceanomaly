@@ -120,82 +120,212 @@ void main() {
     <script type="module">
       import * as THREE from "https://cdn.skypack.dev/three@0.136.0";
       
-      console.log("Script loading...");
-      
       document.addEventListener('DOMContentLoaded', function() {
-        console.log("DOM loaded");
         const particleCanvas = document.getElementById('particleCanvas');
-        console.log("Canvas element:", particleCanvas);
-        
-        if (!particleCanvas) {
-          console.error("Canvas not found!");
-          return;
+        if (!particleCanvas) return;
+
+        let scene, camera, renderer;
+        let simulationMaterial, renderMaterial;
+        let simulationScene, simulationCamera, renderTarget;
+        let particles, wireframeSphere;
+        const width = 256, height = 256;
+
+        function getRandomData(width, height, size) {
+          const len = width * height * 4;
+          const data = new Float32Array(len);
+          for (let i = 0; i < len; i++) {
+            const stride = i * 4;
+            data[stride] = (Math.random() * 2 - 1) * size;
+            data[stride + 1] = (Math.random() * 2 - 1) * size;
+            data[stride + 2] = (Math.random() * 2 - 1) * size;
+            data[stride + 3] = Math.random();
+          }
+          return data;
         }
 
-        // Very simple test first
-        console.log("Creating scene...");
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, particleCanvas.offsetWidth / particleCanvas.offsetHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas: particleCanvas, alpha: true });
-        
-        console.log("Canvas size:", particleCanvas.offsetWidth, "x", particleCanvas.offsetHeight);
-        renderer.setSize(particleCanvas.offsetWidth, particleCanvas.offsetHeight);
-        camera.position.z = 3;
-
-        // Create a HUGE visible sphere 
-        console.log("Creating sphere...");
-        const geometry = new THREE.SphereGeometry(2, 16, 16); // Much bigger
-        const material = new THREE.MeshBasicMaterial({ 
-          color: 0x00ff00, // Bright green
-          wireframe: true 
-        });
-        const sphere = new THREE.Mesh(geometry, material);
-        scene.add(sphere);
-        console.log("Sphere added, scene children:", scene.children.length);
-
-        // Create HUGE particles
-        console.log("Creating particles...");
-        const particleGeometry = new THREE.BufferGeometry();
-        const particleCount = 500; // Fewer but bigger
-        const positions = new Float32Array(particleCount * 3);
-        
-        for (let i = 0; i < particleCount * 3; i += 3) {
-          positions[i] = (Math.random() - 0.5) * 8; // Spread wider
-          positions[i + 1] = (Math.random() - 0.5) * 8;
-          positions[i + 2] = (Math.random() - 0.5) * 8;
+        function onWindowResize() {
+          camera.aspect = particleCanvas.offsetWidth / particleCanvas.offsetHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(particleCanvas.offsetWidth, particleCanvas.offsetHeight);
         }
-        
-        particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        const particleMaterial = new THREE.PointsMaterial({ 
-          color: 0xff00ff, // Bright magenta
-          size: 10 // Much bigger
-        });
-        const particles = new THREE.Points(particleGeometry, particleMaterial);
-        scene.add(particles);
-        console.log("Particles added, total scene children:", scene.children.length);
+
+        function init() {
+          scene = new THREE.Scene();
+          camera = new THREE.PerspectiveCamera(75, particleCanvas.offsetWidth / particleCanvas.offsetHeight, 0.1, 1000);
+          camera.position.z = 2;
+
+          renderer = new THREE.WebGLRenderer({ canvas: particleCanvas, antialias: true });
+          renderer.setSize(particleCanvas.offsetWidth, particleCanvas.offsetHeight);
+          renderer.setClearColor(0x000000, 0);
+
+          simulationScene = new THREE.Scene();
+          simulationCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+          renderTarget = new THREE.WebGLRenderTarget(width, height, {
+            format: THREE.RGBAFormat,
+            type: THREE.FloatType
+          });
+
+          const initialPositions = getRandomData(width, height, 1);
+          const textureA = new THREE.DataTexture(initialPositions, width, height, THREE.RGBAFormat, THREE.FloatType);
+          textureA.needsUpdate = true;
+
+          const textureLoader = new THREE.TextureLoader();
+          const noiseTexture = textureLoader.load(
+            "https://barradeau.com/blog/wp-content/uploads/2016/01/noise.jpg",
+            () => console.log("Noise texture loaded successfully"),
+            undefined,
+            (err) => console.error("Error loading noise texture:", err)
+          );
+
+          simulationMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+              positions: { value: textureA },
+              noiseTexture: { value: noiseTexture },
+              time: { value: 0 }
+            },
+            vertexShader: \`
+              varying vec2 vUv;
+              void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+              }
+            \`,
+            fragmentShader: \`
+              uniform sampler2D positions;
+              uniform sampler2D noiseTexture;
+              uniform float time;
+              varying vec2 vUv;
+
+              float sdSkull(vec3 p) {
+                vec3 q = abs(p);
+                float d = length(p - vec3(0.0, 0.15, 0.0)) - 0.45; // Head
+                d = min(d, length(p - vec3(0.0, -0.2, 0.25)) - 0.12); // Nose
+                d = min(d, length(p - vec3(0.18, -0.05, 0.35)) - 0.1); // Right eye
+                d = min(d, length(p - vec3(-0.18, -0.05, 0.35)) - 0.1); // Left eye
+                d = min(d, length(max(q - vec3(0.2, -0.35, 0.25), 0.0)) - 0.05); // Jaw
+                return d;
+              }
+
+              vec3 rotateY(vec3 p, float angle) {
+                float c = cos(angle);
+                float s = sin(angle);
+                return vec3(c*p.x - s*p.z, p.y, s*p.x + c*p.z);
+              }
+
+              void main() {
+                vec3 pos = texture2D(positions, vUv).xyz;
+                vec3 noise = texture2D(noiseTexture, vUv + time * 0.01).rgb;
+                
+                pos = rotateY(pos, time * 0.2);
+                
+                float skull = sdSkull(pos);
+                float particleDensity = smoothstep(0.3, -0.05, skull);
+                
+                vec3 normalizedPos = normalize(pos);
+                pos = mix(pos, normalizedPos * (1.5 - skull * 0.1), 0.1);
+                
+                pos += (noise - 0.5) * 0.02 * (1.0 - particleDensity);
+                
+                if (noise.r > 0.98) {
+                  pos = normalize(noise - 0.5) * 1.2;
+                  particleDensity = 0.5;
+                }
+
+                gl_FragColor = vec4(pos, particleDensity);
+              }
+            \`
+          });
+
+          const simulationPlane = new THREE.PlaneGeometry(2, 2);
+          const simulationMesh = new THREE.Mesh(simulationPlane, simulationMaterial);
+          simulationScene.add(simulationMesh);
+
+          const particleGeometry = new THREE.BufferGeometry();
+          const positions = new Float32Array(width * height * 3);
+          const uvs = new Float32Array(width * height * 2);
+
+          for (let i = 0; i < width * height; i++) {
+            uvs[i * 2] = (i % width) / width;
+            uvs[i * 2 + 1] = Math.floor(i / width) / height;
+          }
+
+          particleGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+          particleGeometry.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
+
+          renderMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+              positionTexture: { value: null },
+              pointSize: { value: 2.0 },
+              time: { value: 0 }
+            },
+            vertexShader: \`
+              uniform sampler2D positionTexture;
+              uniform float pointSize;
+              uniform float time;
+              varying float vOpacity;
+              void main() {
+                vec4 posData = texture2D(positionTexture, uv);
+                vec3 pos = posData.xyz;
+                vOpacity = posData.w;
+                vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                gl_PointSize = pointSize * (1.0 / -mvPosition.z);
+                gl_Position = projectionMatrix * mvPosition;
+              }
+            \`,
+            fragmentShader: \`
+              varying float vOpacity;
+              void main() {
+                float r = length(gl_PointCoord - vec2(0.5));
+                if (r > 0.5) discard;
+                float alpha = smoothstep(0.5, 0.0, r) * vOpacity;
+                gl_FragColor = vec4(1.0, 1.0, 1.0, alpha * 0.7);
+              }
+            \`,
+            blending: THREE.AdditiveBlending,
+            depthTest: false,
+            transparent: true
+          });
+
+          particles = new THREE.Points(particleGeometry, renderMaterial);
+          scene.add(particles);
+
+          // Add wireframe sphere
+          const sphereGeometry = new THREE.SphereGeometry(0.8, 32, 32);
+          const wireframeMaterial = new THREE.MeshBasicMaterial({
+            color: 0xf0f0f0,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.2
+          });
+          wireframeSphere = new THREE.Mesh(sphereGeometry, wireframeMaterial);
+          scene.add(wireframeSphere);
+
+          window.addEventListener("resize", onWindowResize);
+        }
 
         function animate() {
           requestAnimationFrame(animate);
-          
-          sphere.rotation.x += 0.01;
-          sphere.rotation.y += 0.01;
-          
-          particles.rotation.y += 0.005;
-          
+
+          const time = performance.now() * 0.001;
+
+          simulationMaterial.uniforms.time.value = time;
+          renderMaterial.uniforms.time.value = time;
+
+          wireframeSphere.rotation.y = time * 0.1;
+
+          renderer.setRenderTarget(renderTarget);
+          renderer.render(simulationScene, simulationCamera);
+          renderer.setRenderTarget(null);
+
+          renderMaterial.uniforms.positionTexture.value = renderTarget.texture;
+
           renderer.render(scene, camera);
         }
 
-        console.log("Starting animation...");
+        init();
         animate();
         
-        // Handle resize
-        window.addEventListener('resize', () => {
-          const width = particleCanvas.offsetWidth;
-          const height = particleCanvas.offsetHeight;
-          camera.aspect = width / height;
-          camera.updateProjectionMatrix();
-          renderer.setSize(width, height);
-        });
+        console.log("Particle count:", width * height);
       });
     </script>
 
