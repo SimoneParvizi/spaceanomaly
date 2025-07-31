@@ -653,14 +653,24 @@ canvas#space {
   overflow: hidden;
 }
 
-#particleCanvas {
+#background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: #000;
+  display: block;
+  z-index: 1;
+}
+
+#background canvas {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: transparent;
-  z-index: 1;
+  pointer-events: auto;
 }
 
 .text-wrapper {
@@ -677,6 +687,7 @@ canvas#space {
   box-sizing: border-box;
   max-width: 100vw;
   overflow: hidden;
+  pointer-events: none;
 }
 
 .text-wrapper h1 {
@@ -688,6 +699,7 @@ canvas#space {
   max-width: 600px;
   text-wrap: balance;
   margin: 0;
+  pointer-events: auto;
 }
 
 .text-wrapper .small-text {
@@ -703,6 +715,7 @@ canvas#space {
   max-width: 200px;
   text-overflow: ellipsis;
   overflow: hidden;
+  pointer-events: auto;
 }
 
 .text-line {
