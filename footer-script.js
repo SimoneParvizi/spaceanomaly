@@ -133,6 +133,54 @@ document.addEventListener('DOMContentLoaded', function() {
       if (typeof gsap !== 'undefined') {
         gsap.registerPlugin(ScrollTrigger);
         
+        // Simple scroll-based black overlay
+        function updateShaderOverlay() {
+          const shaderSection = document.querySelector(".shader-section");
+          if (!shaderSection) return;
+          
+          const rect = shaderSection.getBoundingClientRect();
+          const windowHeight = window.innerHeight;
+          const sectionHeight = rect.height;
+          
+          // Start fading when section starts scrolling up, finish when 70% scrolled out
+          let progress = 0;
+          if (rect.top < windowHeight * 0.3) { // Start fade earlier
+            const scrollDistance = (windowHeight * 0.3) - rect.top;
+            const maxScroll = sectionHeight * 0.7; // Fade over 70% of section height
+            progress = Math.min(scrollDistance / maxScroll, 1);
+            
+            // Apply easing for smoother transition
+            progress = progress * progress; // Quadratic easing
+          }
+          
+          // Apply black overlay with calculated opacity
+          const overlayElement = shaderSection;
+          overlayElement.style.setProperty('--black-overlay-opacity', progress);
+        }
+        
+        // Add scroll listener
+        window.addEventListener('scroll', updateShaderOverlay);
+        updateShaderOverlay(); // Initial call
+        
+        // Smooth transition from starfield to particle section
+        gsap.to("#webglSection", {
+          backgroundColor: "#000000", // Match the particle section background
+          scrollTrigger: {
+            trigger: "#stickyContainer",
+            start: "80% top",
+            end: "bottom top",
+            scrub: true,
+            onUpdate: (self) => {
+              const progress = self.progress;
+              // Gradually fade the starfield canvas
+              const canvas = document.querySelector("#space");
+              if (canvas) {
+                canvas.style.opacity = 1 - (progress * 0.5);
+              }
+            }
+          }
+        });
+        
         // Pin the webgl section and create warp effect
         const pinTimeline = gsap.timeline({
           scrollTrigger: {
