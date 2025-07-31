@@ -12,19 +12,24 @@
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 </head>
 <body>
-    <!-- Shader Section -->
-    <div class="shader-section">
-        <canvas id="canvas"></canvas>
-        <textarea id="codeEditor" class="editor" spellcheck="false" autocorrect="off" autocapitalize="off" translate="no" oninput="render()"></textarea>
-        <pre id="error"></pre>
-        <div id="indicator"></div>
-        <div id="controls">
-            <div class="controls">
-                <input id="btnToggleView" class="icon" type="checkbox" name="toggleView" onclick="toggleView()">
-                <input id="btnToggleResolution" class="icon" type="checkbox" name="toggleResolution" onchange="toggleResolution()">
-                <input id="btnReset" class="icon" type="checkbox" name="reset" onclick="reset()">
+    <!-- Shader Container with spacer -->
+    <div class="shader-container">
+        <!-- Shader Section -->
+        <div class="shader-section">
+            <canvas id="canvas"></canvas>
+            <textarea id="codeEditor" class="editor" spellcheck="false" autocorrect="off" autocapitalize="off" translate="no" oninput="render()"></textarea>
+            <pre id="error"></pre>
+            <div id="indicator"></div>
+            <div id="controls">
+                <div class="controls">
+                    <input id="btnToggleView" class="icon" type="checkbox" name="toggleView" onclick="toggleView()">
+                    <input id="btnToggleResolution" class="icon" type="checkbox" name="toggleResolution" onchange="toggleResolution()">
+                    <input id="btnReset" class="icon" type="checkbox" name="reset" onclick="reset()">
+                </div>
             </div>
         </div>
+        <!-- Spacer for shader fade transition -->
+        <div class="shader-fade-spacer"></div>
     </div>
 
     <script type="x-shader/x-fragment">#version 300 es

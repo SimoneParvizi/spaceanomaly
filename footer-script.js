@@ -133,29 +133,43 @@ document.addEventListener('DOMContentLoaded', function() {
       if (typeof gsap !== 'undefined') {
         gsap.registerPlugin(ScrollTrigger);
         
-        // Simple scroll-based black overlay
+        // Simple scroll-based black overlay for sticky shader
         function updateShaderOverlay() {
           const shaderSection = document.querySelector(".shader-section");
-          if (!shaderSection) return;
+          const shaderContainer = document.querySelector(".shader-container");
+          if (!shaderSection || !shaderContainer) return;
           
-          const rect = shaderSection.getBoundingClientRect();
+          const containerRect = shaderContainer.getBoundingClientRect();
           const windowHeight = window.innerHeight;
-          const sectionHeight = rect.height;
           
-          // Start fading when section starts scrolling up, finish when 70% scrolled out
+          // Show shader only when container is in view
+          if (containerRect.bottom <= 0) {
+            // Container has passed - hide shader
+            shaderSection.style.display = 'none';
+            return;
+          } else {
+            shaderSection.style.display = 'grid';
+          }
+          
+          // Calculate progress based on container scroll
           let progress = 0;
-          if (rect.top < windowHeight * 0.3) { // Start fade earlier
-            const scrollDistance = (windowHeight * 0.3) - rect.top;
-            const maxScroll = sectionHeight * 0.7; // Fade over 70% of section height
-            progress = Math.min(scrollDistance / maxScroll, 1);
+          if (containerRect.top < 0) {
+            // Container is scrolling up - start fade
+            const scrollDistance = Math.abs(containerRect.top);
+            const fadeDistance = containerRect.height - windowHeight; // Total scroll distance
+            progress = Math.min(scrollDistance / fadeDistance, 1);
             
-            // Apply easing for smoother transition
-            progress = progress * progress; // Quadratic easing
+            // Apply smooth easing
+            progress = progress * progress * (3 - 2 * progress); // Smooth step easing
           }
           
           // Apply black overlay with calculated opacity
-          const overlayElement = shaderSection;
-          overlayElement.style.setProperty('--black-overlay-opacity', progress);
+          shaderSection.style.setProperty('--black-overlay-opacity', progress);
+          
+          // Debug log
+          if (Math.floor(Date.now() / 100) % 10 === 0) {
+            console.log('Fade progress:', progress.toFixed(2), 'Container top:', containerRect.top.toFixed(0));
+          }
         }
         
         // Add scroll listener
