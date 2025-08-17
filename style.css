@@ -300,11 +300,6 @@ body::before {
   z-index: 60;
   opacity: 0;
   pointer-events: none;
-  transition: transform 0.3s ease;
-}
-
-.restart-btn:hover {
-  transform: rotate(45deg);
 }
 
 .dot-container {
