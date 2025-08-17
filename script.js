@@ -254,7 +254,11 @@ function initAnimation() {
     Flip.from(state, {
       duration: 1.2, // Slower for emphasis
       ease: "customEase",
-      absolute: true
+      absolute: true,
+      onComplete: () => {
+        // Add drag cursor after zoom is complete
+        document.body.classList.add('zoom-complete');
+      }
     });
 
     // Initialize the interactive cosmos shader after zoom starts
@@ -831,6 +835,8 @@ class PointerHandler {
     element.addEventListener("pointerdown", (e) => {
       this.active = true
       this.pointers.set(e.pointerId, map(element, this.getScale(), e.clientX, e.clientY))
+      // Hide cursor when dragging starts
+      document.body.classList.add('dragging')
     })
     element.addEventListener("pointerup", (e) => {
       if (this.count === 1) {
@@ -838,6 +844,10 @@ class PointerHandler {
       }
       this.pointers.delete(e.pointerId)
       this.active = this.pointers.size > 0
+      // Show drag cursor again when dragging stops
+      if (!this.active) {
+        document.body.classList.remove('dragging')
+      }
     })
     element.addEventListener("pointerleave", (e) => {
       if (this.count === 1) {
@@ -845,6 +855,10 @@ class PointerHandler {
       }
       this.pointers.delete(e.pointerId)
       this.active = this.pointers.size > 0
+      // Show drag cursor again when pointer leaves
+      if (!this.active) {
+        document.body.classList.remove('dragging')
+      }
     })
     element.addEventListener("pointermove", (e) => {
       if (!this.active) return
