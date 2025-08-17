@@ -275,9 +275,20 @@ function initAnimation() {
     "finalAnimation"
   );
 
-  // Reveal the extra digits in VE to show full binary
+  // Reveal the extra digits in VE to show full binary and make original digit transparent
   mainTl.to(
     "#text-ve .extra-digits",
+    {
+      opacity: 0.4,
+      duration: 0.8,
+      ease: "power2.out"
+    },
+    "finalAnimation+=0.4"
+  );
+
+  // Make the original 0 in VE more transparent
+  mainTl.to(
+    "#text-ve .original-digit",
     {
       opacity: 0.4,
       duration: 0.8,
@@ -303,9 +314,20 @@ function initAnimation() {
     });
   }, "finalAnimation");
 
-  // Reveal the extra digits in LA to show full binary
+  // Reveal the extra digits in LA to show full binary and make original digit transparent
   mainTl.to(
     "#text-la .extra-digits",
+    {
+      opacity: 0.4,
+      duration: 0.8,
+      ease: "power2.out"
+    },
+    "finalAnimation+=0.4"
+  );
+
+  // Make the original 0 in LA more transparent
+  mainTl.to(
+    "#text-la .original-digit",
     {
       opacity: 0.4,
       duration: 0.8,

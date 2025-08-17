@@ -139,6 +139,11 @@ body::before {
   letter-spacing: -0.02em;
 }
 
+.extra-digits {
+  color: white;
+  font-weight: 700;
+}
+
 /* Big title */
 .big-title {
   position: fixed;
