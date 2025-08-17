@@ -263,7 +263,7 @@ function initAnimation() {
     }, 200);
   }, "finalAnimation");
 
-  // Animate VE to the padding position - SLOWER
+  // Animate VE to the padding position and reveal extra digit - SLOWER
   mainTl.to(
     "#text-ve",
     {
@@ -273,6 +273,17 @@ function initAnimation() {
       ease: "directionalEase"
     },
     "finalAnimation"
+  );
+
+  // Reveal the extra digits in VE to show full binary
+  mainTl.to(
+    "#text-ve .extra-digits",
+    {
+      opacity: 0.4,
+      duration: 0.8,
+      ease: "power2.out"
+    },
+    "finalAnimation+=0.4"
   );
 
   // For LA, we'll use FLIP to ensure smooth animation - SLOWER
@@ -291,6 +302,17 @@ function initAnimation() {
       absolute: true
     });
   }, "finalAnimation");
+
+  // Reveal the extra digits in LA to show full binary
+  mainTl.to(
+    "#text-la .extra-digits",
+    {
+      opacity: 0.4,
+      duration: 0.8,
+      ease: "power2.out"
+    },
+    "finalAnimation+=0.4"
+  );
 
   // Add a slight pause after the zoom animation
   mainTl.add("pauseAfterZoom", ">0.3");
