@@ -3,34 +3,572 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Designer Studio - Space Anomaly</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Cosmic Reflections</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/3.4.3/gl-matrix-min.js"></script>
-    <script src="https://unpkg.com/simplex-noise@3.0.1/simplex-noise.js"></script>
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/CustomEase.min.js"></script>
+    <style>
+        /* Google Fonts Import */
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+        @font-face {
+          src: url("https://fonts.cdnfonts.com/css/general-sans") format("woff2");
+          font-family: "General Sans", sans-serif;
+          font-weight: 400;
+        }
+
+        /* Design Tokens and CSS Variables */
+        :root {
+          --color-background: #e6f0ec;
+          --color-text-primary: #2c3e50;
+          --color-text-secondary: rgba(44, 62, 80, 0.75);
+          --color-text-muted: rgba(44, 62, 80, 0.5);
+          --color-accent: #e67e22;
+          --color-grid-overlay: rgba(44, 62, 80, 0.03);
+          --color-mountain-dark: #2a4c3e;
+          --color-mountain-light: #5a8a7a;
+          /* Typography */
+          --font-primary: "General Sans", sans-serif;
+          --font-mono: "JetBrains Mono", monospace;
+          --font-weight-regular: 400;
+          --font-weight-medium: 500;
+          --font-weight-bold: 700;
+          --letter-spacing: -0.02em;
+          --letter-spacing-wide: 0.05em;
+          /* Spacing */
+          --spacing-xs: 0.25rem;
+          --spacing-sm: 0.5rem;
+          --spacing-md: 1rem;
+          --spacing-lg: 2rem;
+          --spacing-xl: 4rem;
+          /* Grid */
+          --grid-columns: 12;
+          --grid-gap: 1rem;
+          /* Z-Index */
+          --z-index-background: 1;
+          --z-index-main: 10;
+          --z-index-overlay: 2;
+          --z-index-preloader: 9999;
+          /* Transitions */
+          --transition-default: 0.3s ease;
+          --transition-slow: 1s ease;
+        }
+
+        /* Base Styles */
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          font-family: var(--font-primary);
+          font-weight: var(--font-weight-medium);
+          letter-spacing: var(--letter-spacing);
+        }
+
+        body {
+          background-color: var(--color-background);
+          color: var(--color-text-primary);
+          overflow-x: hidden;
+        }
+
+        /* Grid System */
+        .grid-container {
+          position: fixed;
+          width: 100%;
+          height: 100%;
+          top: 0;
+          left: 0;
+          padding: 0 var(--spacing-lg);
+          display: grid;
+          grid-template-columns: repeat(var(--grid-columns), 1fr);
+          grid-column-gap: var(--grid-gap);
+          pointer-events: none;
+          z-index: var(--z-index-overlay);
+        }
+
+        .grid-column {
+          height: 0;
+          background-color: var(--color-grid-overlay);
+          pointer-events: none;
+        }
+
+        /* Preloader */
+        .preloader {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: var(--color-background);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: var(--z-index-preloader);
+          flex-direction: column;
+        }
+
+        .preloader__content {
+          position: relative;
+          width: 450px;
+          height: 280px;
+          overflow: hidden;
+        }
+
+        .preloader__text-container {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          display: flex;
+          gap: 0.5rem;
+          z-index: var(--z-index-preloader);
+          color: var(--color-background);
+          font-size: 2rem;
+          font-weight: var(--font-weight-medium);
+          filter: blur(0px);
+          will-change: transform, filter;
+        }
+
+        .preloader__text-cosmic,
+        .preloader__text-reflections {
+          will-change: transform, color;
+        }
+
+        .preloader__image {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          opacity: 0;
+          transform: scale(0.05);
+          /* Start almost at 0 */
+          transform-origin: center center;
+        }
+
+        .preloader__content {
+          position: relative;
+          width: 450px;
+          height: 280px;
+          overflow: hidden;
+          will-change: transform, filter;
+        }
+
+        .preloader__overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(44, 62, 80, 0.3);
+          z-index: 2;
+        }
+
+        /* Header */
+        .header {
+          padding: var(--spacing-md) var(--spacing-lg);
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          z-index: var(--z-index-main);
+        }
+
+        .header__container {
+          display: grid;
+          grid-template-columns: repeat(12, 1fr);
+          gap: 1rem;
+          width: 100%;
+        }
+
+        .header__logo {
+          grid-column: 1 / span 2;
+          font-family: var(--font-primary);
+          font-weight: 600;
+          font-size: 1.4rem;
+          letter-spacing: -0.03em;
+        }
+
+        .header__contact {
+          grid-column: 4 / span 6;
+          font-family: var(--font-mono);
+          font-size: 0.75rem;
+          letter-spacing: var(--letter-spacing-wide);
+          line-height: 1.5;
+        }
+
+        .header__nav {
+          grid-column: 10 / span 3;
+          display: flex;
+          justify-content: flex-end;
+          gap: var(--spacing-lg);
+          align-items: center;
+        }
+
+        /* Menu hover effects */
+        .nav__item {
+          font-family: var(--font-mono);
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: var(--letter-spacing-wide);
+          color: var(--color-text-secondary);
+          cursor: pointer;
+          position: relative;
+          display: inline-block;
+        }
+
+        /* Strikethrough line */
+        .nav__item::after {
+          content: "";
+          position: absolute;
+          width: 0;
+          height: 1px;
+          top: 50%;
+          left: 0;
+          transform: translateY(-50%);
+          background-color: currentColor;
+          transition: width var(--transition-default);
+        }
+
+        /* Circle element */
+        .nav__item::before {
+          content: "";
+          position: absolute;
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background-color: currentColor;
+          top: 50%;
+          left: -12px;
+          transform: translateY(-50%) scale(0);
+          opacity: 0;
+          transition: transform var(--transition-default),
+            opacity var(--transition-default);
+        }
+
+        /* Hover effects */
+        .nav__item:hover {
+          color: var(--color-text-primary);
+        }
+
+        .nav__item:hover::after {
+          width: 100%;
+        }
+
+        .nav__item:hover::before {
+          transform: translateY(-50%) scale(1);
+          opacity: 1;
+        }
+
+        /* Circles after Contact */
+        .circles-container {
+          display: flex;
+          align-items: center;
+          margin-left: var(--spacing-md);
+        }
+
+        .circle {
+          width: 12px; /* Increased from 10px to 12px */
+          height: 12px; /* Increased from 10px to 12px */
+          border-radius: 50%;
+        }
+
+        .circle-1 {
+          background-color: var(--color-mountain-dark);
+          margin-right: -4px;
+          position: relative;
+          z-index: 2;
+        }
+
+        .circle-2 {
+          background-color: var(--color-mountain-light);
+          position: relative;
+          z-index: 1;
+        }
+
+        /* Hero Section */
+        /* 12-grid system */
+        .container {
+          width: 100%;
+          max-width: 100%;
+          margin: 0 auto;
+          padding: 0 var(--spacing-lg);
+          display: grid;
+          grid-template-columns: repeat(12, 1fr);
+          gap: var(--grid-gap);
+        }
+
+        .hero {
+          height: 100vh;
+          width: 100%;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .hero__content {
+          grid-column: 1 / span 6;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          padding-right: var(--spacing-xl);
+        }
+
+        .hero__project {
+          font-family: var(--font-mono);
+          font-size: 0.75rem;
+          color: var(--color-text-secondary);
+          margin-bottom: var(--spacing-lg);
+          transform: translateY(20px);
+          opacity: 0;
+          text-transform: uppercase;
+          letter-spacing: var(--letter-spacing-wide);
+        }
+
+        .hero__title {
+          font-size: clamp(4rem, 8vw, 9rem);
+          line-height: 0.9;
+          margin-bottom: var(--spacing-lg);
+          font-weight: var(--font-weight-bold);
+          letter-spacing: -0.05em;
+        }
+
+        .hero__title-line {
+          display: block;
+          transform: translateY(100%);
+          opacity: 0;
+        }
+
+        .hero__description {
+          font-size: 1.1rem;
+          line-height: 1.6;
+          color: var(--color-text-secondary);
+          max-width: 460px;
+          transform: translateY(20px);
+          opacity: 0;
+          margin-bottom: var(--spacing-xl);
+        }
+
+        .hero__meta {
+          font-family: var(--font-mono);
+          font-size: 0.75rem;
+          color: var(--color-text-muted);
+          text-transform: uppercase;
+          letter-spacing: var(--letter-spacing-wide);
+          display: flex;
+          justify-content: space-between;
+          transform: translateY(20px);
+          opacity: 0;
+        }
+
+        .hero__image-container {
+          grid-column: 7 / span 6;
+          height: 100vh;
+          display: grid;
+          position: relative;
+          overflow: hidden;
+          padding: 0;
+          margin: 0;
+          align-items: center;
+        }
+
+        /* Shader Editor Styles */
+        ::-webkit-scrollbar {
+          width: 0.625rem;
+          height: 0.625rem;
+        }
+
+        ::-webkit-scrollbar-thumb {
+          background: #111;
+          border-radius: 0.3125rem;
+          box-shadow: inset 0.125rem 0.125rem 0.125rem rgba(255, 255, 255, 0.25),
+            inset -0.125rem -0.125rem 0.125rem rgba(0, 0, 0, 0.25);
+          cursor: default;
+        }
+
+        ::-webkit-scrollbar-track {
+          background: #333;
+        }
+
+        ::selection {
+          background: #fff;
+          color: #333;
+        }
+
+        #canvas,
+        .editor {
+          grid-row: 1;
+          grid-column: 1;
+        }
+
+        #canvas {
+          --canvas-z-index: -1;
+          width: 100%;
+          height: 100vh;
+          object-fit: cover;
+          background: black;
+          touch-action: none;
+          z-index: var(--canvas-z-index);
+          transform: scale(1.1);
+          transform-origin: center;
+          will-change: transform;
+        }
+
+        .editor,
+        .overlay,
+        #error {
+          font-family: 'Courier New', Courier, monospace;
+          background: repeating-linear-gradient(0deg, #000a, #1119, #000a .25rem);
+          padding: 1em;
+        }
+
+        .editor {
+          color: #fefefe;
+          tab-size: 2;
+          border: none;
+          resize: none;
+          height: 100vh;
+        }
+
+        .editor:focus {
+          outline: none;
+        }
+
+        #error {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          margin: 0;
+          padding-block: 0;
+          padding-top: .5em;
+          color: firebrick;
+          overflow: auto;
+          text-wrap: pretty;
+          max-height: 4rem;
+        }
+
+        #indicator {
+          visibility: hidden;
+          position: absolute;
+          top: calc(var(--top, 0px) - var(--scroll-top, 0px));
+          width: 0;
+          height: 0;
+          border-top: 10px solid transparent;
+          border-bottom: 10px solid transparent;
+          border-left: 10px solid firebrick;
+          transform: translateY(-25%);
+        }
+
+        .overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          margin: 0;
+        }
+
+        .editor,
+        .overlay {
+          font-size: 1rem;
+          line-height: 1.2;
+          white-space: pre;
+        }
+
+
+        .hidden {
+          display: none !important;
+        }
+
+        .opaque {
+          opacity: 1 !important;
+          background: #111 !important;
+        }
+
+    </style>
 </head>
 <body>
-    <!-- Shader Container with spacer -->
-    <div class="shader-container">
-        <!-- Shader Section -->
-        <div class="shader-section">
-            <canvas id="canvas"></canvas>
-            <textarea id="codeEditor" class="editor" spellcheck="false" autocorrect="off" autocapitalize="off" translate="no" oninput="render()"></textarea>
-            <pre id="error"></pre>
-            <div id="indicator"></div>
-            <div id="controls">
-                <div class="controls">
-                    <input id="btnToggleView" class="icon" type="checkbox" name="toggleView" onclick="toggleView()">
-                    <input id="btnToggleResolution" class="icon" type="checkbox" name="toggleResolution" onchange="toggleResolution()">
-                    <input id="btnReset" class="icon" type="checkbox" name="reset" onclick="reset()">
-                </div>
-            </div>
-        </div>
-        <!-- Spacer for shader fade transition -->
-        <div class="shader-fade-spacer"></div>
+    <!-- Grid Overlay -->
+    <div class="grid-container">
+      <div class="grid-column"></div>
+      <div class="grid-column"></div>
+      <div class="grid-column"></div>
+      <div class="grid-column"></div>
+      <div class="grid-column"></div>
+      <div class="grid-column"></div>
+      <div class="grid-column"></div>
+      <div class="grid-column"></div>
+      <div class="grid-column"></div>
+      <div class="grid-column"></div>
+      <div class="grid-column"></div>
+      <div class="grid-column"></div>
     </div>
+
+    <!-- Preloader -->
+    <div class="preloader">
+      <div class="preloader__text-container">
+        <div class="preloader__text-cosmic">Cosmic</div>
+        <div class="preloader__text-reflections">Reflections</div>
+      </div>
+      <div class="preloader__content">
+        <div class="preloader__overlay"></div>
+        <img src="https://images.unsplash.com/photo-1680472139496-aec545d8392b?q=80&w=2187&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Space" class="preloader__image">
+        <img src="https://images.unsplash.com/photo-1660659236367-710aa4ae7e19?q=80&w=2235&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Space" class="preloader__image">
+        <img src="https://images.unsplash.com/photo-1660121022318-3cb0f06e54ca?q=80&w=2235&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Space" class="preloader__image">
+        <img src="https://images.unsplash.com/photo-1640794082887-8346fb991e66?q=80&w=2128&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Space" class="preloader__image">
+        <img src="https://images.unsplash.com/photo-1660228652863-891f27cbe45c?q=80&w=2235&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Space" class="preloader__image">
+        <img src="https://images.unsplash.com/photo-1658498042419-be460a938f93?q=80&w=2187&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Space" class="preloader__image">
+      </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header__container">
+        <div class="header__logo">FZ.25</div>
+        <div class="header__contact">
+          AVAILABLE FOR FREELANCE<br>
+          hi@filipzrnzevic.com
+        </div>
+        <nav class="header__nav">
+          <div class="nav__item">Exploration</div>
+          <div class="nav__item">Space</div>
+          <div class="nav__item">Contact</div>
+          <div class="circles-container">
+            <div class="circle circle-1"></div>
+            <div class="circle circle-2"></div>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero__content">
+          <div class="hero__project">Cosmic Reflections / 01</div>
+          <h1 class="hero__title">
+            <span class="hero__title-line">Space &</span>
+            <span class="hero__title-line">Emptiness</span>
+          </h1>
+          <p class="hero__description">In the void between thoughts, we discover the creative force that shapes our perceptions. The emptiness of space is not absence, but pure potential.</p>
+          <div class="hero__meta">
+            <div>
+              <p>Project Date</p>
+              <p>2025</p>
+            </div>
+            <div>
+              <p>Creative Direction</p>
+              <p>Design Studio</p>
+            </div>
+          </div>
+        </div>
+        <div class="hero__image-container">
+          <canvas id="canvas"></canvas>
+          <textarea id="codeEditor" class="editor" spellcheck="false" autocorrect="off" autocapitalize="off" translate="no" oninput="render()"></textarea>
+          <pre id="error"></pre>
+          <div id="indicator"></div>
+        </div>
+      </div>
+    </section>
 
     <script type="x-shader/x-fragment">#version 300 es
 /*********
@@ -114,150 +652,659 @@ void main() {
   O=vec4(col,1);
 }</script>
 
-    <script src="script.js"></script>
-    <script src="footer-script.js"></script>
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        console.log("Initializing particles.js background");
-        
-        particlesJS("background", {
-          "particles": {
-            "number": {
-              "value": 80,
-              "density": {
-                "enable": true,
-                "value_area": 1200
-              }
-            },
-            "color": {
-              "value": "#ffffff"
-            },
-            "shape": {
-              "type": "circle",
-              "stroke": {
-                "width": 0,
-                "color": "#000000"
-              },
-              "polygon": {
-                "nb_sides": 3
-              },
-              "image": {
-                "src": "img/github.svg",
-                "width": 100,
-                "height": 100
-              }
-            },
-            "opacity": {
-              "value": 0.5,
-              "random": false,
-              "anim": {
-                "enable": false,
-                "speed": 1,
-                "opacity_min": 0.1,
-                "sync": false
-              }
-            },
-            "size": {
-              "value": 2,
-              "random": true,
-              "anim": {
-                "enable": false,
-                "speed": 100,
-                "size_min": 0.1,
-                "sync": false
-              }
-            },
-            "line_linked": {
-              "enable": true,
-              "distance": 200,
-              "color": "#ffffff",
-              "opacity": 0.4,
-              "width": 2
-            },
-            "move": {
-              "enable": true,
-              "speed": 1,
-              "direction": "none",
-              "random": true,
-              "straight": false,
-              "out_mode": "bounce",
-              "bounce": true,
-              "attract": {
-                "enable": false,
-                "rotateX": 600,
-                "rotateY": 1200
-              }
-            }
-          },
-          "interactivity": {
-            "detect_on": "canvas",
-            "events": {
-              "onhover": {
-                "enable": true,
-                "mode": "bubble"
-              },
-              "onclick": {
-                "enable": true,
-                "mode": "repulse"
-              },
-              "resize": true
-            },
-            "modes": {
-              "grab": {
-                "distance": 20,
-                "line_linked": {
-                  "opacity": 1
-                }
-              },
-              "bubble": {
-                "distance": 200,
-                "size": 10,
-                "duration": 2,
-                "opacity": 0.6,
-                "speed": 10
-              },
-              "repulse": {
-                "distance": 400,
-                "duration": 0.4
-              },
-              "push": {
-                "particles_nb": 2
-              },
-              "remove": {
-                "particles_nb": 2
-              }
-            }
-          },
-          "retina_detect": true
+        // Register GSAP plugins
+        gsap.registerPlugin(ScrollTrigger, CustomEase);
+        // Custom ease animations (inspired by the article)
+        CustomEase.create("customEase", "0.6, 0.01, 0.05, 1");
+        CustomEase.create("directionalEase", "0.16, 1, 0.3, 1");
+        // Additional custom eases for smoother animations
+        CustomEase.create("smoothBlur", "0.25, 0.1, 0.25, 1");
+        CustomEase.create("gentleIn", "0.38, 0.005, 0.215, 1");
+        // Prevent any layout shifts during animation
+        gsap.config({
+          force3D: true
         });
-      });
+        // Wait for images to load
+        window.addEventListener("load", () => {
+          // Preloader animation with rotating images
+          const preloader = document.querySelector(".preloader");
+          const preloaderTextContainer = document.querySelector(
+            ".preloader__text-container"
+          );
+          const preloaderTextCosmic = document.querySelector(".preloader__text-cosmic");
+          const preloaderTextReflections = document.querySelector(
+            ".preloader__text-reflections"
+          );
+          const preloaderImages = document.querySelectorAll(".preloader__image");
+          const gridColumns = document.querySelectorAll(".grid-column");
+
+          // Master timeline for preloader
+          const masterTimeline = gsap.timeline();
+          // First animate the text
+          masterTimeline.fromTo(
+            preloaderTextContainer,
+            {
+              opacity: 0,
+              y: 10
+            },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.4, // Even faster text animation
+              ease: "power2.out"
+            }
+          );
+          // Create separate timeline for image transitions
+          const imageAnimation = gsap.timeline();
+          // Show the first image immediately at full size
+          gsap.set(preloaderImages[0], {
+            opacity: 1,
+            scale: 1 // First image is already at full size
+          });
+          // Function to cycle through images - only apply zoom to 2nd image onwards
+          preloaderImages.forEach((img, index) => {
+            if (index > 0 && index < preloaderImages.length) {
+              // Start with the second image (index > 0)
+              const delay = index === 1 ? 0.3 : 0.1; // Longer delay for first transition only
+              // Super-fast zoom from tiny to full size
+              imageAnimation.fromTo(
+                preloaderImages[index],
+                {
+                  opacity: 0,
+                  scale: 0.05 // Start very small
+                },
+                {
+                  opacity: 1,
+                  scale: 1, // Zoom to normal
+                  duration: 0.3, // Even faster transition
+                  ease: "power3.out" // More pronounced easing
+                },
+                `+=${delay}`
+              );
+              // Fade out previous image as next one comes in
+              imageAnimation.to(
+                preloaderImages[index - 1],
+                {
+                  opacity: 0,
+                  duration: 0.15, // Very fast fade out
+                  ease: "power1.in"
+                },
+                "<0.1"
+              ); // Overlap for smoother transition
+            }
+          });
+          // Add image animation to master timeline
+          masterTimeline.add(imageAnimation);
+
+          // Calculate window width to determine how far to move the text
+          const windowWidth = window.innerWidth;
+          const leftPosition = -windowWidth / 3; // Move to about 1/3 of the screen from left
+          const rightPosition = windowWidth / 3; // Move to about 1/3 of the screen from right
+
+          // Animate the text words to split apart and change color
+          masterTimeline.to(
+            preloaderTextCosmic,
+            {
+              x: leftPosition,
+              color: "var(--color-text-primary)",
+              duration: 0.8,
+              ease: "customEase"
+            },
+            "-=0.5"
+          );
+
+          masterTimeline.to(
+            preloaderTextReflections,
+            {
+              x: rightPosition,
+              color: "var(--color-text-primary)",
+              duration: 0.8,
+              ease: "customEase"
+            },
+            "<"
+          );
+
+          // Add a small delay after the text splits
+          masterTimeline.to({}, { duration: 0.8 }); // 0.8 second delay
+
+          // Transition out preloader with a simple, clean animation
+          masterTimeline.to(preloader, {
+            y: "-100%",
+            duration: 0.5, // Very fast exit
+            ease: "power3.inOut", // More pronounced easing
+            onComplete: () => {
+              preloader.style.display = "none";
+              // Animate grid columns
+              animateGridColumns();
+              // Trigger animations for hero section
+              animateHero();
+            }
+          }); // Removed the delay here since we added it above
+        });
+
+        // Animate grid columns
+        function animateGridColumns() {
+          const gridColumns = document.querySelectorAll(".grid-column");
+          gsap.to(gridColumns, {
+            height: "100%",
+            duration: 1,
+            ease: "power2.out",
+            stagger: 0.05
+          });
+        }
+
+        // Hero section animation
+        function animateHero() {
+          const titleLines = document.querySelectorAll(".hero__title-line");
+          const heroProject = document.querySelector(".hero__project");
+          const heroDescription = document.querySelector(".hero__description");
+          const heroMeta = document.querySelector(".hero__meta");
+          const heroImage = document.querySelector(".hero__image");
+
+          // Create a simple, clean timeline
+          const heroTimeline = gsap.timeline();
+          // Animate title lines first - simple transform
+          heroTimeline.to(titleLines, {
+            y: 0,
+            opacity: 1,
+            duration: 1.2,
+            ease: "power2.out",
+            stagger: 0.15
+          });
+          // Animate project info, description, and meta
+          heroTimeline.to(
+            [heroProject, heroDescription, heroMeta],
+            {
+              y: 0,
+              opacity: 1,
+              duration: 1,
+              ease: "power2.out",
+              stagger: 0.15
+            },
+            "-=0.8"
+          );
+          // Initialize shader after other animations
+          heroTimeline.call(() => {
+            initShader();
+          }, null, "-=1.2");
+        }
+
+        /*********
+         * made by Matthias Hurrle (@atzedent)
+         */
+        let editMode = false // set to false to hide the code editor on load
+        let resolution = .5 // set 1 for full resolution or to .5 to start with half resolution on load
+        let renderDelay = 1000 // delay in ms before rendering the shader after a change
+        let dpr = Math.max(1, resolution * window.devicePixelRatio)
+        let frm, source, editor, store, renderer, pointers
+        const shaderId = 'oggKrGW'
+
+        function resize() {
+          const { innerWidth: width, innerHeight: height } = window
+          const canvas = document.getElementById('canvas')
+
+          canvas.width = width * dpr
+          canvas.height = height * dpr
+
+          if (renderer) {
+            renderer.updateScale(dpr)
+          }
+        }
+        function loop(now) {
+          renderer.updateMouse(pointers.first)
+          renderer.updatePointerCount(pointers.count)
+          renderer.updatePointerCoords(pointers.coords)
+          renderer.updateMove(pointers.move)
+          renderer.render(now)
+          frm = requestAnimationFrame(loop)
+        }
+        function renderThis() {
+          editor.clearError()
+          store.putShaderSource(shaderId, editor.text)
+
+          const result = renderer.test(editor.text)
+
+          if (result) {
+            editor.setError(result)
+          } else {
+            renderer.updateShader(editor.text)
+          }
+          cancelAnimationFrame(frm) // Always cancel the previous frame!
+          loop(0)
+        }
+        const debounce = (fn, delay) => {
+          let timerId
+          return (...args) => {
+            clearTimeout(timerId)
+            timerId = setTimeout(() => fn.apply(this, args), delay)
+          }
+        }
+        const render = debounce(renderThis, renderDelay)
+
+        function initShader() {
+          const canvas = document.getElementById('canvas')
+          source = document.querySelector("script[type='x-shader/x-fragment']")
+
+          renderer = new Renderer(canvas, dpr)
+          pointers = new PointerHandler(canvas, dpr)
+          store    = new Store(window.location)
+          editor   = new Editor(document.getElementById('codeEditor'), document.getElementById('error'), document.getElementById('indicator'))
+          editor.text = source.textContent
+          renderer.setup()
+          renderer.init()
+
+          if (!editMode) {
+            editor.hidden = true
+            const canvas = document.getElementById('canvas')
+            canvas.style.setProperty('--canvas-z-index', 0)
+          }
+          canvas.addEventListener('shader-error', e => editor.setError(e.detail))
+
+          resize()
+
+          if (renderer.test(source.textContent) === null) {
+            renderer.updateShader(source.textContent)
+          }
+          loop(0)
+          window.onresize = resize
+        }
+
+        class Renderer {
+          #vertexSrc = "#version 300 es\nprecision highp float;\nin vec4 position;\nvoid main(){gl_Position=position;}"
+          #fragmtSrc = "#version 300 es\nprecision highp float;\nout vec4 O;\nuniform float time;\nuniform vec2 resolution;\nvoid main() {\n\tvec2 uv=gl_FragCoord.xy/resolution;\n\tO=vec4(uv,sin(time)*.5+.5,1);\n}"
+          #vertices = [-1, 1, -1, -1, 1, 1, 1, -1]
+          constructor(canvas, scale) {
+            this.canvas = canvas
+            this.scale = scale
+            this.gl = canvas.getContext("webgl2")
+            this.gl.viewport(0, 0, canvas.width * scale, canvas.height * scale)
+            this.shaderSource = this.#fragmtSrc
+            this.mouseMove = [0, 0]
+            this.mouseCoords = [0, 0]
+            this.pointerCoords = [0, 0]
+            this.nbrOfPointers = 0
+          }
+          get defaultSource() { return this.#fragmtSrc }
+          updateShader(source) {
+            this.reset()
+            this.shaderSource = source
+            this.setup()
+            this.init()
+          }
+          updateMove(deltas) {
+            this.mouseMove = deltas
+          }
+          updateMouse(coords) {
+            this.mouseCoords = coords
+          }
+          updatePointerCoords(coords) {
+            this.pointerCoords = coords
+          }
+          updatePointerCount(nbr) {
+            this.nbrOfPointers = nbr
+          }
+          updateScale(scale) {
+            this.scale = scale
+            this.gl.viewport(0, 0, this.canvas.width * scale, this.canvas.height * scale)
+          }
+          compile(shader, source) {
+            const gl = this.gl
+            gl.shaderSource(shader, source)
+            gl.compileShader(shader)
+
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+              console.error(gl.getShaderInfoLog(shader))
+              this.canvas.dispatchEvent(new CustomEvent('shader-error', { detail: gl.getShaderInfoLog(shader) }))
+            }
+          }
+          test(source) {
+            let result = null
+            const gl = this.gl
+            const shader = gl.createShader(gl.FRAGMENT_SHADER)
+            gl.shaderSource(shader, source)
+            gl.compileShader(shader)
+
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+              result = gl.getShaderInfoLog(shader)
+            }
+            if (gl.getShaderParameter(shader, gl.DELETE_STATUS)) {
+              gl.deleteShader(shader)
+            }
+            return result
+          }
+          reset() {
+            const { gl, program, vs, fs } = this
+            if (!program || gl.getProgramParameter(program, gl.DELETE_STATUS)) return
+            if (gl.getShaderParameter(vs, gl.DELETE_STATUS)) {
+              gl.detachShader(program, vs)
+              gl.deleteShader(vs)
+            }
+            if (gl.getShaderParameter(fs, gl.DELETE_STATUS)) {
+              gl.detachShader(program, fs)
+              gl.deleteShader(fs)
+            }
+            gl.deleteProgram(program)
+          }
+          setup() {
+            const gl = this.gl
+            this.vs = gl.createShader(gl.VERTEX_SHADER)
+            this.fs = gl.createShader(gl.FRAGMENT_SHADER)
+            this.compile(this.vs, this.#vertexSrc)
+            this.compile(this.fs, this.shaderSource)
+            this.program = gl.createProgram()
+            gl.attachShader(this.program, this.vs)
+            gl.attachShader(this.program, this.fs)
+            gl.linkProgram(this.program)
+
+            if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+              console.error(gl.getProgramInfoLog(this.program))
+            }
+          }
+          init() {
+            const { gl, program } = this
+            this.buffer = gl.createBuffer()
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.#vertices), gl.STATIC_DRAW)
+
+            const position = gl.getAttribLocation(program, "position")
+
+            gl.enableVertexAttribArray(position)
+            gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0)
+
+            program.resolution = gl.getUniformLocation(program, "resolution")
+            program.time = gl.getUniformLocation(program, "time")
+            program.move = gl.getUniformLocation(program, "move")
+            program.touch = gl.getUniformLocation(program, "touch")
+            program.pointerCount = gl.getUniformLocation(program, "pointerCount")
+            program.pointers = gl.getUniformLocation(program, "pointers")
+          }
+          render(now = 0) {
+            const { gl, program, buffer, canvas, mouseMove, mouseCoords, pointerCoords, nbrOfPointers } = this
+            
+            if (!program || gl.getProgramParameter(program, gl.DELETE_STATUS)) return
+
+            gl.clearColor(0, 0, 0, 1)
+            gl.clear(gl.COLOR_BUFFER_BIT)
+            gl.useProgram(program)
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+            gl.uniform2f(program.resolution, canvas.width, canvas.height)
+            gl.uniform1f(program.time, now * 1e-3)
+            gl.uniform2f(program.move, ...mouseMove)
+            gl.uniform2f(program.touch, ...mouseCoords)
+            gl.uniform1i(program.pointerCount, nbrOfPointers)
+            gl.uniform2fv(program.pointers, pointerCoords)
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+          }
+        }
+        class Store {
+          constructor(key) {
+            this.key = key
+            this.store = window.localStorage
+          }
+          #ownShadersKey = 'ownShaders'
+          #StorageType = Object.freeze({
+            shader: 'fragmentSource',
+            config: 'config'
+          })
+          #getKeyPrefix(type) {
+            return `${type}${btoa(this.key)}`
+          }
+          #getKey(type, name) {
+            return `${this.#getKeyPrefix(type)}${btoa(name)}`
+          }
+          putShaderSource(name, source) {
+            const storageType = this.#StorageType.shader
+            this.store.setItem(this.#getKey(storageType, name), source)
+          }
+          getShaderSource(name) {
+            const storageType = this.#StorageType.shader
+            return this.store.getItem(this.#getKey(storageType, name))
+          }
+          deleteShaderSource(name) {
+            const storageType = this.#StorageType.shader
+            this.store.removeItem(this.#getKey(storageType, name))
+          }
+          /** @returns {{title:string, uuid:string}[]} */
+          getOwnShaders() {
+            const storageType = this.#StorageType.config
+            const result = this.store.getItem(this.#getKey(storageType, this.#ownShadersKey))
+            
+            return result ? JSON.parse(result) : []
+          }
+          /** @param {{title:string, uuid:string}[]} shader */
+          putOwnShader(shader) {
+            const ownShaders = this.getOwnShaders()
+            const storageType = this.#StorageType.config
+            const index = ownShaders.findIndex((s) => s.uuid === shader.uuid)
+            if (index === -1) {
+              ownShaders.push(shader)
+            } else {
+              ownShaders[index] = shader
+            }
+            this.store.setItem(this.#getKey(storageType, this.#ownShadersKey), JSON.stringify(ownShaders))
+          }
+          deleteOwnShader(uuid) {
+            const ownShaders = this.getOwnShaders()
+            const storageType = this.#StorageType.config
+            this.store.setItem(this.#getKey(storageType, this.#ownShadersKey), JSON.stringify(ownShaders.filter((s) => s.uuid !== uuid) ))
+            this.deleteShaderSource(uuid)
+          }
+          /** @param {string[]} keep The names of the shaders to keep*/
+          cleanup(keep=[]) {
+            const storageType = this.#StorageType.shader
+            const ownShaders = this.getOwnShaders().map((s) => this.#getKey(storageType, s.uuid))
+            const premadeShaders = keep.map((name) => this.#getKey(storageType, name))
+            const keysToKeep = [...ownShaders, ...premadeShaders]
+            const result = []
+
+            for (let i = 0; i < this.store.length; i++) {
+              const key = this.store.key(i)
+
+              if (key.startsWith(this.#getKeyPrefix(this.#StorageType.shader)) && !keysToKeep.includes(key)) {
+                result.push(key)
+              }
+            }
+
+            result.forEach((key) => this.store.removeItem(key))
+          }
+        }
+        class PointerHandler {
+          constructor(element, scale) {
+            this.scale = scale
+            this.active = false
+            this.pointers = new Map()
+            this.lastCoords = [0,0]
+            this.moves = [0,0]
+            const map = (element, scale, x, y) => [x * scale, element.height - y * scale]
+            element.addEventListener("pointerdown", (e) => {
+              this.active = true
+              this.pointers.set(e.pointerId, map(element, this.getScale(), e.clientX, e.clientY))
+            })
+            element.addEventListener("pointerup", (e) => {
+              if (this.count === 1) {
+                this.lastCoords = this.first
+              }
+              this.pointers.delete(e.pointerId)
+              this.active = this.pointers.size > 0
+            })
+            element.addEventListener("pointerleave", (e) => {
+              if (this.count === 1) {
+                this.lastCoords = this.first
+              }
+              this.pointers.delete(e.pointerId)
+              this.active = this.pointers.size > 0
+            })
+            element.addEventListener("pointermove", (e) => {
+              if (!this.active) return
+              this.lastCoords = [e.clientX, e.clientY]
+              this.pointers.set(e.pointerId, map(element, this.getScale(), e.clientX, e.clientY))
+              this.moves = [this.moves[0]+e.movementX, this.moves[1]+e.movementY]
+            })
+          }
+          getScale() {
+            return this.scale
+          }
+          updateScale(scale) { this.scale = scale }
+          reset() {
+            this.pointers.clear()
+            this.active = false
+            this.moves = [0,0]
+          }
+          get count() {
+            return this.pointers.size
+          }
+          get move() {
+            return this.moves
+          }
+          get coords() {
+            return this.pointers.size > 0 ? Array.from(this.pointers.values()).map((p) => [...p]).flat() : [0, 0]
+          }
+          get first() {
+            return this.pointers.values().next().value || this.lastCoords
+          }
+        }
+        class Editor {
+          constructor(textarea, errorfield, errorindicator) {
+            this.textarea = textarea
+            this.errorfield = errorfield
+            this.errorindicator = errorindicator
+            textarea.addEventListener('keydown', this.handleKeydown.bind(this))
+            textarea.addEventListener('scroll', this.handleScroll.bind(this))
+          }
+          get hidden() { return this.textarea.classList.contains('hidden') }
+          set hidden(value) { value ? this.#hide() : this.#show() }
+          get text() { return this.textarea.value }
+          set text(value) { this.textarea.value = value }
+          get scrollTop() { return this.textarea.scrollTop }
+          set scrollTop(value) { this.textarea.scrollTop = value }
+          setError(message) {
+            this.errorfield.innerHTML = message
+            this.errorfield.classList.add('opaque')
+            const match = message.match(/ERROR: \d+:(\d+):/)
+            const lineNumber = match ? parseInt(match[1]) : 0
+            const overlay = document.createElement('pre')
+
+            overlay.classList.add('overlay')
+            overlay.textContent = '\n'.repeat(lineNumber)
+
+            document.body.appendChild(overlay)
+
+            const offsetTop = parseInt(getComputedStyle(overlay).height)
+
+            this.errorindicator.style.setProperty('--top', offsetTop + 'px')
+            this.errorindicator.style.visibility = 'visible'
+
+            document.body.removeChild(overlay)
+          }
+          clearError() {
+            this.errorfield.textContent = ''
+            this.errorfield.classList.remove('opaque')
+            this.errorfield.blur()
+            this.errorindicator.style.visibility = 'hidden'
+          }
+          focus() {
+            this.textarea.focus()
+          }
+          #hide() {
+            for (const el of [this.errorindicator, this.errorfield, this.textarea]) {
+              el.classList.add('hidden')
+            }
+          }
+          #show() {
+            for (const el of [this.errorindicator, this.errorfield, this.textarea]) {
+              el.classList.remove('hidden')
+            }
+            this.focus()
+          }
+          handleScroll() {
+            this.errorindicator.style.setProperty('--scroll-top', `${this.textarea.scrollTop}px`)
+          }
+          handleKeydown(event) {
+            if (event.key === "Tab") {
+              event.preventDefault()
+              this.handleTabKey(event.shiftKey)
+            } else if (event.key === "Enter") {
+              event.preventDefault()
+              this.handleEnterKey()
+            }
+          }
+          handleTabKey(shiftPressed) {
+            if (this.#getSelectedText() !== "") {
+              if (shiftPressed) {
+                this.#unindentSelectedText()
+                return
+              }
+              this.#indentSelectedText()
+            } else {
+              this.#indentAtCursor()
+            }
+          }
+          #getSelectedText() {
+            const editor = this.textarea
+            const start = editor.selectionStart
+            const end = editor.selectionEnd
+            return editor.value.substring(start, end)
+          }
+          #indentAtCursor() {
+            const editor = this.textarea
+            const cursorPos = editor.selectionStart
+
+            document.execCommand('insertText', false, '\t')
+            editor.selectionStart = editor.selectionEnd = cursorPos + 1
+          }
+          #indentSelectedText() {
+            const editor = this.textarea
+            const cursorPos = editor.selectionStart
+            const selectedText = this.#getSelectedText()
+            const lines = selectedText.split('\n')
+            const indentedText = lines.map(line => '\t' + line).join('\n')
+
+            document.execCommand('insertText', false, indentedText)
+            editor.selectionStart = cursorPos
+          }
+          #unindentSelectedText() {
+            const editor = this.textarea
+            const cursorPos = editor.selectionStart
+            const selectedText = this.#getSelectedText()
+            const lines = selectedText.split('\n')
+            const indentedText = lines.map(line => line.replace(/^\t/, '').replace(/^ /, '')).join('\n')
+
+            document.execCommand('insertText', false, indentedText)
+            editor.selectionStart = cursorPos
+          }
+          handleEnterKey() {
+            const editor = this.textarea
+            const visibleTop = editor.scrollTop
+            const cursorPosition = editor.selectionStart
+
+            let start = cursorPosition - 1
+            while (start >= 0 && editor.value[start] !== '\n') {
+              start--
+            }
+
+            let newLine = ''
+            while (start < cursorPosition - 1 && (editor.value[start + 1] === ' ' || editor.value[start + 1] === '\t')) {
+              newLine += editor.value[start + 1]
+              start++
+            }
+
+            document.execCommand('insertText', false, '\n' + newLine)
+            editor.selectionStart = editor.selectionEnd = cursorPosition + 1 + newLine.length
+            editor.scrollTop = visibleTop // Prevent the editor from scrolling
+            const lineHeight = editor.scrollHeight / editor.value.split('\n').length
+            const line = editor.value.substring(0, cursorPosition).split('\n').length
+
+            // Do the actual layout calculation in order to get the correct scroll position
+            const visibleBottom = editor.scrollTop + editor.clientHeight
+            const lineTop = lineHeight * (line - 1)
+            const lineBottom = lineHeight * (line + 2)
+
+            // If the cursor is outside the visible range, scroll the editor
+            if (lineTop < visibleTop) editor.scrollTop = lineTop
+            if (lineBottom > visibleBottom) editor.scrollTop = lineBottom - editor.clientHeight
+          }
+        }
     </script>
-
-
-    <!-- Sticky WebGL container - moved outside footer -->
-    <div class="sticky-container" id="stickyContainer">
-        <div class="webgl-section" id="webglSection">
-            <div class="canvas-container" id="canvasContainer">
-                <canvas id="space"></canvas>
-                <div class="animated-text" id="animatedText">
-                    TRUST YOUR EYES<br />NOT THE NOISE
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Particle Background Section -->
-    <div class="particle-section">
-        <div id="background"></div>
-        <div class="text-wrapper">
-            <h2 class="small-text">Let your intuition lead.</h2>
-            <h1 class="text-line">
-                Answers lie beneath the surface.<br />
-                Trust the whispers of your inner voice.
-            </h1>
-            <h2 class="small-text">Follow your truth.</h2>
-        </div>
-    </div>
-
 </body>
 </html>
