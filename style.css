@@ -35,11 +35,28 @@ body {
 
 /* Custom cursor states */
 body.zoom-complete {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='20'%3E%3Ctext x='0' y='15' font-family='Arial, sans-serif' font-size='12' fill='white'%3Edrag me%3C/text%3E%3C/svg%3E"), auto;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='20'%3E%3Ctext x='0' y='15' font-family='Arial, sans-serif' font-size='12' fill='white'%3Edrag me%3C/text%3E%3C/svg%3E"), auto !important;
 }
 
-body.dragging {
-  cursor: none;
+body.zoom-complete *:not(.restart-btn):not(.social-links a):not(.coordinates):not(.icon) {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='20'%3E%3Ctext x='0' y='15' font-family='Arial, sans-serif' font-size='12' fill='white'%3Edrag me%3C/text%3E%3C/svg%3E"), auto !important;
+}
+
+body.zoom-complete #final-image,
+body.zoom-complete #canvas {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='20'%3E%3Ctext x='0' y='15' font-family='Arial, sans-serif' font-size='12' fill='white'%3Edrag me%3C/text%3E%3C/svg%3E"), auto !important;
+}
+
+body.zoom-complete .restart-btn,
+body.zoom-complete .social-links a,
+body.zoom-complete .footer .coordinates,
+body.zoom-complete .icon {
+  cursor: pointer !important;
+}
+
+body.dragging,
+body.dragging * {
+  cursor: none !important;
 }
 
 /* Background noise effect */

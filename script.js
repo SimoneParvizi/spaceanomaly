@@ -250,15 +250,14 @@ function initAnimation() {
       height: "100dvh"
     });
 
+    // Add drag cursor immediately when zoom starts
+    document.body.classList.add('zoom-complete');
+    
     // Use FLIP to animate the container expansion - SLOWER
     Flip.from(state, {
       duration: 1.2, // Slower for emphasis
       ease: "customEase",
-      absolute: true,
-      onComplete: () => {
-        // Add drag cursor after zoom is complete
-        document.body.classList.add('zoom-complete');
-      }
+      absolute: true
     });
 
     // Initialize the interactive cosmos shader after zoom starts
@@ -468,6 +467,17 @@ function initAnimation() {
 window.addEventListener("DOMContentLoaded", () => {
   // Delay initialization slightly to ensure all elements are properly rendered
   setTimeout(initAnimation, 100);
+});
+
+// Ensure cursor state is maintained on mouse movement
+document.addEventListener("mousemove", () => {
+  if (document.body.classList.contains('zoom-complete') && !document.body.classList.contains('dragging')) {
+    // Force the drag cursor to remain active
+    if (!document.body.style.cursor.includes('drag me')) {
+      document.body.classList.remove('zoom-complete');
+      setTimeout(() => document.body.classList.add('zoom-complete'), 1);
+    }
+  }
 });
 
 // Restart button functionality - now navigates to website
