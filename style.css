@@ -24,7 +24,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
-  background-color: #f5f5f5;
+  background-color: black;
   height: 100vh;
   display: flex;
   justify-content: center;
@@ -103,6 +103,7 @@ body::before {
   height: 300px;
   overflow: hidden;
   z-index: 5;
+  background-color: black;
 }
 
 .image-wrapper {
@@ -419,6 +420,7 @@ body::before {
   right: 2em;
   opacity: 0;
   transition: opacity 0.3s ease;
+  display: none;
 }
 
 .controls {

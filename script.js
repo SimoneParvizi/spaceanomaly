@@ -422,9 +422,9 @@ window.addEventListener("DOMContentLoaded", () => {
   setTimeout(initAnimation, 100);
 });
 
-// Restart button functionality
+// Restart button functionality - now navigates to website
 document.querySelector(".restart-btn").addEventListener("click", () => {
-  initAnimation();
+  window.open("https://parvizisimone.com", "_blank");
 });
 
 // Handle window resize
